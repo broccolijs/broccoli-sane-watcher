@@ -23,7 +23,7 @@ Watcher.prototype.scheduleBuild = function () {
 
   var build = function () {
     this.timeout = null;
-    this.build();
+    return this.build();
   }.bind(this);
 
   this.sequence = this.sequence.then(function () {
