@@ -22,8 +22,9 @@
   },
   "homepage": "https://github.com/krisselden/broccoli-sane-watcher",
   "dependencies": {
-    "rsvp": "^3.0.6",
-    "sane": "^0.5.1"
+    "rsvp": "~3.0.8",
+    "sane": "~0.5.1",
+    "broccoli": "~0.12.2"
   },
   "devDependencies": {
     "broccoli": "^0.12.2",

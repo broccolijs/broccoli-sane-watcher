@@ -35,6 +35,7 @@ describe('broccoli-sane-watcher', function (done) {
         fs.writeFileSync('tests/fixtures/a/file.js');
       }
     });
+
     watcher.on('error', function (error) {
       assert.ok(false, error.message);
       done();
