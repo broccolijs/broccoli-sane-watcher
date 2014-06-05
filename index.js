@@ -1,6 +1,7 @@
 var EventEmitter   = require('events').EventEmitter;
 var sane           = require('sane');
 var Promise        = require('rsvp').Promise;
+var printSlowTrees = require('broccoli/lib/logging').printSlowTrees;
 
 module.exports = Watcher;
 function Watcher(builder, options) {
@@ -21,11 +22,12 @@ Watcher.prototype.scheduleBuild = function () {
     this.timeout = setTimeout(resolve, this.options.debounce || 100);
   }.bind(this));
 
-  var build = function () {
+  var build = function() {
     this.timeout = null;
-    this.build();
+    return this.build();
   }.bind(this);
 
+  var verbose = this.options.verbose;
   this.sequence = this.sequence.then(function () {
     return timeout.then(build);
   });
@@ -35,7 +37,17 @@ Watcher.prototype.build = function Watcher_build() {
   var addWatchDir = this.addWatchDir.bind(this);
   var triggerChange = this.triggerChange.bind(this);
   var triggerError = this.triggerError.bind(this);
-  return this.builder.build(addWatchDir).then(triggerChange, triggerError);
+
+  return this.builder
+    .build(addWatchDir)
+    .then(triggerChange, triggerError)
+    .then(function(run) {
+      if (this.options.verbose) {
+        printSlowTrees(run.graph);
+      }
+
+      return run;
+    }.bind(this));
 };
 
 Watcher.prototype.addWatchDir = function Watcher_addWatchDir(dir) {
