@@ -18,6 +18,7 @@ Watcher.prototype = Object.create(EventEmitter.prototype);
 Watcher.prototype.scheduleBuild = function () {
   if (this.timeout) return;
 
+  // we want the timeout to start now before we wait for the current build
   var timeout = new Promise(function (resolve, reject) {
     this.timeout = setTimeout(resolve, this.options.debounce || 100);
   }.bind(this));
@@ -27,10 +28,13 @@ Watcher.prototype.scheduleBuild = function () {
     return this.build();
   }.bind(this);
 
-  var verbose = this.options.verbose;
-  this.sequence = this.sequence.then(function () {
+  // we want the build to wait first for the current build, then the timeout
+  function timoutThenBuild() {
     return timeout.then(build);
-  });
+  }
+  // we want the current promise to be waiting for the current build regardless if it fails or not
+  // can't use finally because we want to be able to affect the result.
+  this.sequence = this.sequence.then(timoutThenBuild, timoutThenBuild);
 };
 
 Watcher.prototype.build = function Watcher_build() {

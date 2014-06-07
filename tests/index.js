@@ -3,7 +3,8 @@ var broccoli = require('broccoli');
 var rimraf = require('rimraf');
 var assert = require("assert");
 var Watcher = require('..');
-var Tree = require('./tree');
+var TestFilter = require('./test_filter');
+var Promise = require('rsvp').Promise;
 
 
 describe('broccoli-sane-watcher', function (done) {
@@ -21,11 +22,13 @@ describe('broccoli-sane-watcher', function (done) {
     rimraf('tests/fixtures', done);
   });
 
-  it('test watching', function (done) {
+  it('should emit change event when file is added', function (done) {
     fs.mkdirSync('tests/fixtures/a');
     var changes = 0;
-    var tree = new Tree(['tests/fixtures/a']);
-    var builder = new broccoli.Builder(tree);
+    var filter = new TestFilter(['tests/fixtures/a'], function () {
+      return 'output';
+    });
+    var builder = new broccoli.Builder(filter);
     watcher = new Watcher(builder);
     watcher.on('change', function (results) {
       assert.equal(results.directory, 'output');
@@ -39,6 +42,33 @@ describe('broccoli-sane-watcher', function (done) {
     watcher.on('error', function (error) {
       assert.ok(false, error.message);
       done();
+    });
+  });
+
+  it('should emit an error when a filter errors', function (done) {
+    fs.mkdirSync('tests/fixtures/a');
+    var filter = new TestFilter(['tests/fixtures/a'], function () {
+      throw new Error('filter error');
+    });
+    var count = 0;
+    var builder = new broccoli.Builder(filter);
+    watcher = new Watcher(builder);
+    watcher.on('change', function (results) {
+      count++;
+      assert.equal(count, 2, "only the second build should be here");
+      assert.equal(results.directory, 'output');
+      done();
+    });
+    watcher.on('error', function (error) {
+      count++;
+      assert.equal(count, 1, "only the first build should be here");
+      if (count !== 1) done();
+      // next result shouldn't fail
+      filter.output = function () {
+        return 'output';
+      };
+      // trigger next build
+      fs.writeFileSync('tests/fixtures/a/file.js');
     });
   });
 });

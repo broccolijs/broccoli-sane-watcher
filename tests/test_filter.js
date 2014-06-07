@@ -1,12 +1,14 @@
 var Promise = require('rsvp').Promise;
 
-module.exports = Tree;
-function Tree(inputs) {
+module.exports = TestFilter;
+function TestFilter(inputs, output) {
   this.inputs = inputs;
+  this.output = output;
 }
 
-Tree.prototype.read = function (readTree) {
+TestFilter.prototype.read = function (readTree) {
   var inputs = this.inputs;
+  var output = this.output;
   var sequence = Promise.resolve();
 
   this.inputs.forEach(function (input) {
@@ -16,6 +18,6 @@ Tree.prototype.read = function (readTree) {
   });
 
   return sequence.then(function () {
-    return 'output';
+    return output();
   });
 };
