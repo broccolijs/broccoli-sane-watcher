@@ -56,7 +56,11 @@ Watcher.prototype.build = function Watcher_build() {
 
 Watcher.prototype.addWatchDir = function Watcher_addWatchDir(dir) {
   if (this.watched[dir]) return;
-  var watcher = sane(dir);
+
+  var watcher = new sane.Watcher(dir, {
+    poll: !!this.options.poll
+  });
+
   watcher.on('change', this.onFileChanged.bind(this));
   watcher.on('add', this.onFileAdded.bind(this));
   watcher.on('delete', this.onFileDeleted.bind(this));
