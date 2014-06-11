@@ -1,3 +1,4 @@
+var fs             = require('fs');
 var EventEmitter   = require('events').EventEmitter;
 var sane           = require('sane');
 var Promise        = require('rsvp').Promise;
@@ -56,6 +57,10 @@ Watcher.prototype.build = function Watcher_build() {
 
 Watcher.prototype.addWatchDir = function Watcher_addWatchDir(dir) {
   if (this.watched[dir]) return;
+
+  if (!fs.existsSync(dir)) {
+    throw new Error('Attempting to watch missing directory: ' + dir);
+  }
 
   var watcher = new sane.Watcher(dir, {
     poll: !!this.options.poll

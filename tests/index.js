@@ -84,4 +84,15 @@ describe('broccoli-sane-watcher', function (done) {
       fs.writeFileSync('tests/fixtures/a/file.js');
     });
   });
+
+  it('should emit a pleasant error when attempting to watch a missing directory', function () {
+    var builder = new broccoli.Builder('test/fixtures/b');
+    var watcher = new Watcher(builder)
+    return watcher.sequence
+      .catch(function(error) {
+        var message = error.message;
+
+        assert.equal(message, 'Attempting to watch missing directory: test/fixtures/b');
+      })
+  });
 });
