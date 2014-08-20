@@ -1,4 +1,5 @@
 var fs             = require('fs');
+var path           = require('path');
 var EventEmitter   = require('events').EventEmitter;
 var sane           = require('sane');
 var Promise        = require('rsvp').Promise;
@@ -16,7 +17,7 @@ function Watcher(builder, options) {
 Watcher.prototype = Object.create(EventEmitter.prototype);
 
 // gathers rapid changes as one build
-Watcher.prototype.scheduleBuild = function () {
+Watcher.prototype.scheduleBuild = function (filePath) {
   if (this.timeout) return;
 
   // we want the timeout to start now before we wait for the current build
@@ -26,7 +27,7 @@ Watcher.prototype.scheduleBuild = function () {
 
   var build = function() {
     this.timeout = null;
-    return this.build();
+    return this.build(filePath);
   }.bind(this);
 
   // we want the build to wait first for the current build, then the timeout
@@ -38,14 +39,17 @@ Watcher.prototype.scheduleBuild = function () {
   this.sequence = this.sequence.then(timoutThenBuild, timoutThenBuild);
 };
 
-Watcher.prototype.build = function Watcher_build() {
+Watcher.prototype.build = function Watcher_build(filePath) {
   var addWatchDir = this.addWatchDir.bind(this);
   var triggerChange = this.triggerChange.bind(this);
   var triggerError = this.triggerError.bind(this);
 
   return this.builder
     .build(addWatchDir)
-    .then(triggerChange, triggerError)
+    .then(function(hash) {
+      hash.filePath = filePath;
+      return triggerChange(hash);
+    }, triggerError)
     .then(function(run) {
       if (this.options.verbose) {
         printSlowTrees(run.graph);
@@ -72,19 +76,19 @@ Watcher.prototype.addWatchDir = function Watcher_addWatchDir(dir) {
   this.watched[dir] = watcher;
 };
 
-Watcher.prototype.onFileChanged = function (path) {
-  if (this.options.verbose) console.log('file changed', path);
-  this.scheduleBuild();
+Watcher.prototype.onFileChanged = function (filePath, root) {
+  if (this.options.verbose) console.log('file changed', filePath);
+  this.scheduleBuild(path.join(root, filePath));
 };
 
-Watcher.prototype.onFileAdded = function (path) {
-  if (this.options.verbose) console.log('file added', path);
-  this.scheduleBuild();
+Watcher.prototype.onFileAdded = function (filePath, root) {
+  if (this.options.verbose) console.log('file added', filePath);
+  this.scheduleBuild(path.join(root, filePath));
 };
 
-Watcher.prototype.onFileDeleted = function (path) {
-  if (this.options.verbose) console.log('file deleted', path);
-  this.scheduleBuild();
+Watcher.prototype.onFileDeleted = function (filePath, root) {
+  if (this.options.verbose) console.log('file deleted', filePath);
+  this.scheduleBuild(path.join(root, filePath));
 };
 
 Watcher.prototype.triggerChange = function (hash) {
