@@ -3,7 +3,7 @@ var path           = require('path');
 var EventEmitter   = require('events').EventEmitter;
 var sane           = require('sane');
 var Promise        = require('rsvp').Promise;
-var printSlowTrees = require('broccoli/lib/logging').printSlowTrees;
+var printSlowTrees = require('broccoli-slow-trees');
 
 module.exports = Watcher;
 function Watcher(builder, options) {
