@@ -119,4 +119,32 @@ describe('broccoli-sane-watcher', function (done) {
       done();
     });
   });
+
+  it('should include the full file system paths of all changed files in the results hash', function(done) {
+    fs.mkdirSync('tests/fixtures/a');
+    var changes = 0;
+    var filter = new TestFilter(['tests/fixtures/a'], function () {
+      return 'output';
+    });
+    var builder = new broccoli.Builder(filter);
+    watcher = new Watcher(builder);
+    watcher.on('change', function (results) {
+      if (changes++) {
+        assert.equal(path.relative(process.cwd(), results.filePath), 'tests/fixtures/a/file-1.js');
+        assert.equal(results.changes.length, 2, 'results hash contains two changes');
+        assert.equal(path.relative(process.cwd(), results.changes[0]), 'tests/fixtures/a/file-1.js');
+        assert.equal(path.relative(process.cwd(), results.changes[1]), 'tests/fixtures/a/file-2.js');
+        done();
+      } else {
+        fs.writeFileSync('tests/fixtures/a/file-1.js');
+        fs.writeFileSync('tests/fixtures/a/file-2.js');
+      }
+    });
+
+    watcher.on('error', function (error) {
+      assert.ok(false, error.message);
+      done();
+    });
+  });
+
 });
