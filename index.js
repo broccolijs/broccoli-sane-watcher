@@ -12,12 +12,14 @@ function Watcher(builder, options) {
   this.watched = {};
   this.timeout = null;
   this.sequence = this.build();
+  this.changes = [];
 }
 
 Watcher.prototype = Object.create(EventEmitter.prototype);
 
 // gathers rapid changes as one build
 Watcher.prototype.scheduleBuild = function (filePath) {
+  this.changes.push(filePath);
   if (this.timeout) return;
 
   // we want the timeout to start now before we wait for the current build
@@ -48,8 +50,10 @@ Watcher.prototype.build = function Watcher_build(filePath) {
     .build(addWatchDir)
     .then(function(hash) {
       hash.filePath = filePath;
+      hash.changes = this.changes;
+      this.changes = [];
       return triggerChange(hash);
-    }, triggerError)
+    }.bind(this), triggerError)
     .then(function(run) {
       if (this.options.verbose) {
         printSlowTrees(run.graph);
