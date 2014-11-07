@@ -9,6 +9,7 @@ module.exports = Watcher;
 function Watcher(builder, options) {
   this.builder = builder;
   this.options = options || {};
+  this.options.filter = this.options.filter || function(name) { return /^[^\.]/.test(name); };
   this.watched = {};
   this.timeout = null;
   this.sequence = this.build();
@@ -81,20 +82,18 @@ Watcher.prototype.addWatchDir = function Watcher_addWatchDir(dir) {
   this.watched[dir] = watcher;
 };
 
-Watcher.prototype.onFileChanged = function (filePath, root) {
-  if (this.options.verbose) console.log('file changed', filePath);
-  this.scheduleBuild(path.join(root, filePath));
-};
+function makeOnChanged (log) {
+  return function (filePath, root) {
+    if (this.options.filter(path.basename(filePath))) {
+      if (this.options.verbose) console.log(log, filePath);
+      this.scheduleBuild(path.join(root, filePath));
+    }
+  };
+}
 
-Watcher.prototype.onFileAdded = function (filePath, root) {
-  if (this.options.verbose) console.log('file added', filePath);
-  this.scheduleBuild(path.join(root, filePath));
-};
-
-Watcher.prototype.onFileDeleted = function (filePath, root) {
-  if (this.options.verbose) console.log('file deleted', filePath);
-  this.scheduleBuild(path.join(root, filePath));
-};
+Watcher.prototype.onFileChanged = makeOnChanged('file changed');
+Watcher.prototype.onFileAdded = makeOnChanged('file added');
+Watcher.prototype.onFileDeleted = makeOnChanged('file deleted');
 
 Watcher.prototype.triggerChange = function (hash) {
   this.emit('change', hash);

@@ -147,4 +147,31 @@ describe('broccoli-sane-watcher', function (done) {
     });
   });
 
+  it('should only see files that the filter authorizes', function(done) {
+    fs.mkdirSync('tests/fixtures/a');
+    var changes = 0;
+    var filter = new TestFilter(['tests/fixtures/a'], function () {
+      return 'output';
+    });
+    var builder = new broccoli.Builder(filter);
+    var filter = function(name) { return /file-1/.test(name); };
+    watcher = new Watcher(builder, {filter: filter});
+    watcher.on('change', function (results) {
+      if (changes++) {
+        results.changes.forEach(function(change) {
+          assert(filter(change), 'changed file respects the filter');
+        });
+        done();
+      } else {
+        fs.writeFileSync('tests/fixtures/a/file-1.js');
+        fs.writeFileSync('tests/fixtures/a/file-2.js');
+      }
+    });
+
+    watcher.on('error', function (error) {
+      assert.ok(false, error.message);
+      done();
+    });
+  });
+
 });
