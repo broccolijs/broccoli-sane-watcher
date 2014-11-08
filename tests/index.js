@@ -6,7 +6,7 @@ var Watcher = require('..');
 var TestFilter = require('./test_filter');
 var Promise = require('rsvp').Promise;
 var path    = require('path');
-
+var sane = require('sane');
 
 describe('broccoli-sane-watcher', function (done) {
   var watcher;
@@ -23,25 +23,31 @@ describe('broccoli-sane-watcher', function (done) {
     rimraf('tests/fixtures', done);
   });
 
-  it('should pass poll option to sane', function (done) {
+  it('should pass poll option to sane', function () {
     fs.mkdirSync('tests/fixtures/a');
     var filter = new TestFilter(['tests/fixtures/a'], function () {
       return 'output';
     });
     var builder = new broccoli.Builder(filter);
-    watcher = new Watcher(builder, { poll: true });
-    watcher.sequence.then(function () {
-      assert.ok(watcher.watched['tests/fixtures/a'].polling);
-      done();
+
+    watcher = new Watcher(builder, {
+      poll: true
+    });
+
+    return watcher.sequence.then(function () {
+      assert.ok(watcher.watched['tests/fixtures/a'] instanceof sane.PollWatcher);
     });
   });
 
   it('should emit change event when file is added', function (done) {
     fs.mkdirSync('tests/fixtures/a');
+
     var changes = 0;
+
     var filter = new TestFilter(['tests/fixtures/a'], function () {
       return 'output';
     });
+
     var builder = new broccoli.Builder(filter);
     watcher = new Watcher(builder);
     watcher.on('change', function (results) {

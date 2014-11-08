@@ -5,12 +5,17 @@ var sane           = require('sane');
 var Promise        = require('rsvp').Promise;
 var printSlowTrees = require('broccoli-slow-trees');
 
+function defaultFilterFunction(name) {
+  return /^[^\.]/.test(name);
+}
+
 module.exports = Watcher;
+
 function Watcher(builder, options) {
   this.builder = builder;
   this.options = options || {};
-  this.options.filter = this.options.filter || function(name) { return /^[^\.]/.test(name); };
-  this.watched = {};
+  this.options.filter = this.options.filter || defaultFilterFunction;
+  this.watched = Object.create(null);
   this.timeout = null;
   this.sequence = this.build();
 }
@@ -22,7 +27,7 @@ Watcher.prototype.scheduleBuild = function (filePath) {
   if (this.timeout) return;
 
   // we want the timeout to start now before we wait for the current build
-  var timeout = new Promise(function (resolve, reject) {
+  var timeout = new Promise(function (resolve) {
     this.timeout = setTimeout(resolve, this.options.debounce || 100);
   }.bind(this));
 
@@ -45,19 +50,24 @@ Watcher.prototype.build = function Watcher_build(filePath) {
   var triggerChange = this.triggerChange.bind(this);
   var triggerError = this.triggerError.bind(this);
 
+  function verboseOutput(run) {
+    if (this.options.verbose) {
+      printSlowTrees(run.graph);
+    }
+
+    return run;
+  }
+
+  function appendFilePath(hash) {
+    hash.filePath = filePath;
+    return hash;
+  }
+
   return this.builder
     .build(addWatchDir)
-    .then(function(hash) {
-      hash.filePath = filePath;
-      return triggerChange(hash);
-    }, triggerError)
-    .then(function(run) {
-      if (this.options.verbose) {
-        printSlowTrees(run.graph);
-      }
-
-      return run;
-    }.bind(this));
+    .then(appendFilePath)
+    .then(triggerChange, triggerError)
+    .then(verboseOutput.bind(this));
 };
 
 Watcher.prototype.addWatchDir = function Watcher_addWatchDir(dir) {
@@ -67,14 +77,12 @@ Watcher.prototype.addWatchDir = function Watcher_addWatchDir(dir) {
     throw new Error('Attempting to watch missing directory: ' + dir);
   }
 
-  var watcher = new sane(dir, {
-    poll: !!this.options.poll,
-    watchman: !!this.options.watchman
-  });
+  var watcher = new sane(dir, this.options);
 
   watcher.on('change', this.onFileChanged.bind(this));
   watcher.on('add', this.onFileAdded.bind(this));
   watcher.on('delete', this.onFileDeleted.bind(this));
+
   this.watched[dir] = watcher;
 };
 
@@ -105,9 +113,10 @@ Watcher.prototype.close = function () {
   clearTimeout(this.timeout);
   var watched = this.watched;
   for (var dir in watched) {
-    if (!watched.hasOwnProperty(dir)) continue;
-    watched[dir].close();
+    if (!watched[dir]) continue;
+    var watcher = watched[dir];
     delete watched[dir];
+    watcher.close();
   }
 };
 
