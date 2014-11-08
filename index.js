@@ -77,10 +77,7 @@ Watcher.prototype.addWatchDir = function Watcher_addWatchDir(dir) {
     throw new Error('Attempting to watch missing directory: ' + dir);
   }
 
-  var watcher = new sane(dir, {
-    poll: !!this.options.poll,
-    watchman: !!this.options.watchman
-  });
+  var watcher = new sane(dir, this.options);
 
   watcher.on('change', this.onFileChanged.bind(this));
   watcher.on('add', this.onFileAdded.bind(this));
