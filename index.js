@@ -95,6 +95,7 @@ Watcher.prototype.addWatchDir = function Watcher_addWatchDir(dir) {
   watcher.on('change', this.onFileChanged.bind(this));
   watcher.on('add', this.onFileAdded.bind(this));
   watcher.on('delete', this.onFileDeleted.bind(this));
+  watcher.on('error', this.onError.bind(this));
 
   this.watched[dir] = watcher;
 };
@@ -111,6 +112,10 @@ function makeOnChanged (log) {
 Watcher.prototype.onFileChanged = makeOnChanged('file changed');
 Watcher.prototype.onFileAdded = makeOnChanged('file added');
 Watcher.prototype.onFileDeleted = makeOnChanged('file deleted');
+
+Watcher.prototype.onError = function(error) {
+  this.emit('error', error);
+}
 
 Watcher.prototype.triggerChange = function (hash) {
   debug('triggerChange');
