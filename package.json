@@ -1,6 +1,6 @@
 {
   "name": "broccoli-sane-watcher",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Alternative watcher that uses sane module instead of polling",
   "main": "index.js",
   "scripts": {
