@@ -25,11 +25,11 @@
     "broccoli-slow-trees": "^1.1.0",
     "debug": "^2.1.0",
     "rsvp": "^3.0.14",
-    "sane": "1.0.0-rc1"
+    "sane": "^1.0.1"
   },
   "devDependencies": {
-    "broccoli": "^0.12.2",
-    "broccoli-static-compiler": "^0.1.4",
+    "broccoli": "^0.15.3",
+    "broccoli-static-compiler": "^0.2.1",
     "mocha": "^2.0.1",
     "rimraf": "^2.2.8",
     "rsvp": "^3.0.14"
