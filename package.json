@@ -1,6 +1,6 @@
 {
   "name": "broccoli-sane-watcher",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Alternative watcher that uses sane module instead of polling",
   "main": "index.js",
   "scripts": {
@@ -28,8 +28,6 @@
     "sane": "^1.0.1"
   },
   "devDependencies": {
-    "broccoli": "^0.15.3",
-    "broccoli-static-compiler": "^0.2.1",
     "mocha": "^2.0.1",
     "rimraf": "^2.2.8",
     "rsvp": "^3.0.14"
