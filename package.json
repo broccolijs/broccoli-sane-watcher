@@ -30,7 +30,6 @@
   "devDependencies": {
     "broccoli": "^0.15.3",
     "mocha": "^2.0.1",
-    "rimraf": "^2.2.8",
-    "rsvp": "^3.0.14"
+    "rimraf": "^2.2.8"
   }
 }
