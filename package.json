@@ -24,7 +24,7 @@
   "dependencies": {
     "broccoli-slow-trees": "^1.1.0",
     "debug": "^2.1.0",
-    "rsvp": "^3.0.14",
+    "rsvp": "^3.0.18",
     "sane": "^1.1.0"
   },
   "devDependencies": {
