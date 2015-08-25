@@ -102,7 +102,7 @@ Watcher.prototype.addWatchDir = function Watcher_addWatchDir(dir) {
 
 function makeOnChanged (log) {
   return function (filePath, root) {
-    if (this.options.filter(path.basename(filePath))) {
+    if (this.options.filter(path.basename(filePath), filePath, root)) {
       if (this.options.verbose) console.log(log, filePath);
       this.scheduleBuild(path.join(root, filePath));
     }
